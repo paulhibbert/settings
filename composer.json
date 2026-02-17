@@ -1,0 +1,51 @@
+{
+    "name": "paulhibbert/settings",
+    "description": "Settings for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Paulhibbert\\Settings\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Paul Hibbert",
+            "email": "30866933+paulhibbert@users.noreply.github.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.0",
+        "illuminate/support": "^12.0",
+        "illuminate/config": "^12.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Paulhibbert\\Settings\\SettingsServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "orchestra/testbench": "10.0",
+        "phpstan/phpstan": "2.1",
+        "laravel/pint": "^1.27"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit",
+        "stan": "./vendor/bin/phpstan analyse --memory-limit=1G",
+        "lint": "./vendor/bin/pint",
+        "check": [
+            "@lint",
+            "@stan",
+            "@test"
+        ]
+    }
+}
