@@ -114,6 +114,17 @@ class ValueTest extends TestCase
         );
     }
 
+    public function test_value_returns_array_if_value_is_json(): void
+    {
+        $jsonValue = json_encode(['key' => 'value']);
+        $this->stringSetting->update(['value' => $jsonValue]);
+        $this->assertSame(['key' => 'value'], Setting::value('StringSetting'));
+        $object = new \stdClass();
+        $object->key = 'value';
+        $this->stringSetting->update(['value' => json_encode($object)]);
+        $this->assertSame(['key' => 'value'], Setting::value('StringSetting'));
+    }
+
     public function test_it_returns_value_if_setting_is_cached(): void
     {
         $this->assertFalse(Cache::has('settings_cache_IntegerSetting'));

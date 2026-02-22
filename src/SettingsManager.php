@@ -66,6 +66,10 @@ final class SettingsManager
         $this->maybeClearCacheForSetting($name);
     }
 
+    /**
+     * Note: cached forever on first retrieval if caching is enabled.
+     * Use the update and delete methods to ensure cache is cleared when settings are modified.
+     */
     public function isEnabled(string $name): bool
     {
         $setting = $this->retrieveSetting($name);
@@ -73,6 +77,14 @@ final class SettingsManager
         return $setting instanceof SettingsDataObject && $setting->isEnabled;
     }
 
+    /**
+     * Note: cached forever on first retrieval if caching is enabled.
+     * Use the update and delete methods to ensure cache is cleared when settings are modified.
+     * 
+     * Returns null if the setting does not exist or is disabled.
+     * Attempts to cast numeric values to int or float, and JSON strings to arrays.
+     * Otherwise returns the raw value as string.
+     */
     public function value(string $name): mixed
     {
         $setting = $this->retrieveSetting($name);
@@ -89,6 +101,10 @@ final class SettingsManager
                 true => (int) $value,
                 false => (float) $value
             };
+        }
+
+        if (json_validate($value)) {
+            return json_decode($value, true);
         }
 
         return $value;
@@ -108,7 +124,13 @@ final class SettingsManager
         return is_float($value) ? $value : null;
     }
 
-    protected function retrieveSetting(string $name): mixed
+    /**
+     * Note: cached forever on first retrieval if caching is enabled.
+     * Use the update and delete methods to ensure cache is cleared when settings are modified.
+     *
+     * Cache::remember returns mixed, but we know it will be either SettingsDataObject or null based on the callback and cache usage.
+     */
+    public function retrieveSetting(string $name): mixed
     {
         if (config('settings.cache_enabled')) {
             $cacheKey = 'settings_cache_'.$name;
