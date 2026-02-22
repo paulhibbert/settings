@@ -119,7 +119,7 @@ class ValueTest extends TestCase
         $jsonValue = json_encode(['key' => 'value']);
         $this->stringSetting->update(['value' => $jsonValue]);
         $this->assertSame(['key' => 'value'], Setting::value('StringSetting'));
-        $object = new \stdClass();
+        $object = new \stdClass;
         $object->key = 'value';
         $this->stringSetting->update(['value' => json_encode($object)]);
         $this->assertSame(['key' => 'value'], Setting::value('StringSetting'));

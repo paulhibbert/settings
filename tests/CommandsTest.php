@@ -6,6 +6,7 @@ namespace Tests;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Paulhibbert\Settings\Console\AddSettingCommand;
 use Paulhibbert\Settings\Facades\Setting;
 use Paulhibbert\Settings\SettingsModel;
@@ -207,6 +208,67 @@ class CommandsTest extends TestCase
     {
         $this->artisan('settings:update InvalidSetting --enabled=invalid')
             ->expectsOutput('Validation error: The enabled option must be 0 or 1.')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseEmpty('settings');
+    }
+
+    public function test_import_uk_holidays_json_imports_an_array_with_expected_keys(): void
+    {
+        $url = 'https://www.gov.uk/bank-holidays.json';
+        Http::fake([
+            $url => Http::response(file_get_contents('./tests/data/uk_holidays.json'), 200),
+        ]);
+        $this->artisan("settings:import UKHolidays --enabled=1 --value={$url}")->assertExitCode(0);
+
+        $setting = Setting::find('UKHolidays');
+        $this->assertInstanceOf(SettingsModel::class, $setting);
+        $this->assertTrue($setting->is_enabled);
+        $value = Setting::value('UKHolidays');
+        $this->assertIsArray($value);
+        $this->assertArrayHasKey('england-and-wales', $value);
+        $this->assertArrayHasKey('scotland', $value);
+        $this->assertArrayHasKey('northern-ireland', $value);
+    }
+
+    public function test_import_with_invalid_url_shows_error(): void
+    {
+        $invalidUrl = 'not-a-valid-url';
+
+        $this->artisan("settings:import InvalidURLSetting --enabled=1 --value={$invalidUrl}")
+            ->expectsOutput('Validation error: The value option must be a valid url.')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseEmpty('settings');
+    }
+
+    public function test_import_with_missing_value_option_shows_error(): void
+    {
+        $this->artisan('settings:import MissingValueOptionSetting --enabled=1')
+            ->expectsOutput('Validation error: The value option is required for import.')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseEmpty('settings');
+    }
+
+    public function test_import_setting_command_with_invalid_enabled_option_shows_error(): void
+    {
+        $this->artisan('settings:import InvalidSetting --enabled=invalid')
+            ->expectsOutput('Validation error: The enabled option must be 0 or 1.')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseEmpty('settings');
+    }
+
+    public function test_import_setting_command_with_valid_format_url_but_unreachable_shows_error(): void
+    {
+        $unreachableUrl = 'https://www.gov.uk/bank-holidays.json';
+        Http::fake([
+            $unreachableUrl => Http::response(null, 500),
+        ]);
+
+        $this->artisan("settings:import UnreachableURLSetting --enabled=1 --value={$unreachableUrl}")
+            ->expectsOutputToContain('The url was unreachable or did not return valid JSON')
             ->assertExitCode(0);
 
         $this->assertDatabaseEmpty('settings');

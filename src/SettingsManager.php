@@ -80,7 +80,7 @@ final class SettingsManager
     /**
      * Note: cached forever on first retrieval if caching is enabled.
      * Use the update and delete methods to ensure cache is cleared when settings are modified.
-     * 
+     *
      * Returns null if the setting does not exist or is disabled.
      * Attempts to cast numeric values to int or float, and JSON strings to arrays.
      * Otherwise returns the raw value as string.
@@ -103,7 +103,7 @@ final class SettingsManager
             };
         }
 
-        if (json_validate($value)) {
+        if (is_string($value) && json_validate($value)) {
             return json_decode($value, true);
         }
 

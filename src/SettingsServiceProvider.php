@@ -8,6 +8,7 @@ use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Paulhibbert\Settings\Console\AddSettingCommand;
+use Paulhibbert\Settings\Console\ImportSettingCommand;
 use Paulhibbert\Settings\Console\ListSettingsCommand;
 use Paulhibbert\Settings\Console\RemoveSettingCommand;
 use Paulhibbert\Settings\Console\UpdateSettingCommand;
@@ -26,6 +27,7 @@ final class SettingsServiceProvider extends ServiceProvider
             RemoveSettingCommand::class,
             UpdateSettingCommand::class,
             ListSettingsCommand::class,
+            ImportSettingCommand::class,
         ]);
     }
 
