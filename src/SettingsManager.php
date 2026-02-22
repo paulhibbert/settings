@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Paulhibbert\Settings;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 use Paulhibbert\Settings\Data\SettingsDataObject;
 
@@ -44,13 +45,16 @@ final class SettingsManager
 
     public function update(SettingsDataObject $data): SettingsModel
     {
-        return SettingsModel::query()->updateOrCreate(
+        $setting = SettingsModel::query()->updateOrCreate(
             ['name' => $data->name],
             [
                 'is_enabled' => (int) $data->isEnabled,
                 'value' => $data->value,
             ]
         );
+        $this->maybeClearCacheForSetting($data->name);
+
+        return $setting;
     }
 
     public function delete(string $name): void
@@ -59,22 +63,27 @@ final class SettingsManager
         if ($deleted === 0) {
             throw new InvalidArgumentException("No setting found for {$name}");
         }
+        $this->maybeClearCacheForSetting($name);
     }
 
     public function isEnabled(string $name): bool
     {
-        $setting = SettingsModel::query()->where('name', $name)->first();
+        $setting = $this->retrieveSetting($name);
 
-        return $setting instanceof SettingsModel && $setting->is_enabled;
+        return $setting instanceof SettingsDataObject && $setting->isEnabled;
     }
 
     public function value(string $name): mixed
     {
-        if ($this->isEnabled($name) === false) {
+        $setting = $this->retrieveSetting($name);
+        if (! $setting instanceof SettingsDataObject) {
+            return null;
+        }
+        if (! $setting->isEnabled) {
             return null;
         }
 
-        $value = SettingsModel::query()->where('name', $name)->first()?->value;
+        $value = $setting->value;
         if (is_numeric($value)) {
             return match (intval($value) == $value) {
                 true => (int) $value,
@@ -97,5 +106,39 @@ final class SettingsManager
         $value = $this->value($name);
 
         return is_float($value) ? $value : null;
+    }
+
+    protected function retrieveSetting(string $name): mixed
+    {
+        if (config('settings.cache_enabled')) {
+            $cacheKey = 'settings_cache_'.$name;
+
+            return Cache::remember($cacheKey, null, function () use ($name) {
+                return $this->fetchSettingDataObject($name);
+            });
+        }
+
+        return $this->fetchSettingDataObject($name);
+    }
+
+    protected function fetchSettingDataObject(string $name): ?SettingsDataObject
+    {
+        $setting = SettingsModel::query()->where('name', $name)->first();
+        if (! $setting instanceof SettingsModel) {
+            return null;
+        }
+
+        return new SettingsDataObject(
+            name: $setting->name,
+            isEnabled: (bool) $setting->is_enabled,
+            value: $setting->value,
+        );
+    }
+
+    protected function maybeClearCacheForSetting(string $name): void
+    {
+        if (Cache::has("settings_cache_{$name}")) {
+            Cache::forget("settings_cache_{$name}");
+        }
     }
 }

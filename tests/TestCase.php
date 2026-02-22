@@ -25,6 +25,7 @@ abstract class TestCase extends OrchestraTestCase
                 'database' => ':memory:',
                 'prefix' => '',
             ]);
+            $config->set('cache.default', 'array');
         });
     }
 

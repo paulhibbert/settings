@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use InvalidArgumentException;
 use Paulhibbert\Settings\Facades\Setting;
 use Paulhibbert\Settings\SettingsModel;
@@ -110,5 +112,15 @@ class ValueTest extends TestCase
             InvalidArgumentException::class,
             'No setting found for NonExistentSetting'
         );
+    }
+
+    public function test_it_returns_value_if_setting_is_cached(): void
+    {
+        $this->assertFalse(Cache::has('settings_cache_IntegerSetting'));
+        Config::set('settings.cache_enabled', true);
+        $this->assertSame(42, Setting::value('IntegerSetting'));
+        $this->integerSetting->update(['value' => '100']);
+        $this->assertSame(42, Setting::value('IntegerSetting'));
+        $this->assertTrue(Cache::has('settings_cache_IntegerSetting'));
     }
 }

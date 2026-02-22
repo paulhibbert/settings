@@ -39,7 +39,7 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit",
+        "test": "./vendor/bin/phpunit --testdox",
         "stan": "./vendor/bin/phpstan analyse --memory-limit=1G",
         "lint": "./vendor/bin/pint",
         "check": [

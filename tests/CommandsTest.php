@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Paulhibbert\Settings\Console\AddSettingCommand;
 use Paulhibbert\Settings\Facades\Setting;
 use Paulhibbert\Settings\SettingsModel;
@@ -82,6 +83,23 @@ class CommandsTest extends TestCase
             ->assertExitCode(0);
 
         $this->assertDatabaseEmpty('settings');
+    }
+
+    public function test_remove_setting_command_deletes_setting_and_forgets_cache_if_set(): void
+    {
+        SettingsModel::query()->create([
+            'name' => 'SettingToRemove',
+            'is_enabled' => 1,
+            'value' => 'SomeValue',
+        ]);
+        Cache::put('settings_cache_SettingToRemove', 'arbitrary_value');
+        $this->assertTrue(Cache::has('settings_cache_SettingToRemove'));
+
+        $this->artisan('settings:remove SettingToRemove')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseEmpty('settings');
+        $this->assertFalse(Cache::has('settings_cache_SettingToRemove'));
     }
 
     public function test_remove_setting_command_with_nonexistent_setting_shows_error(): void
@@ -167,6 +185,22 @@ class CommandsTest extends TestCase
         $this->assertInstanceOf(SettingsModel::class, $setting);
         $this->assertSame('NewValue', $setting->value);
         $this->assertTrue($setting->is_enabled);
+    }
+
+    public function test_update_setting_command_forgets_cache_if_set(): void
+    {
+        SettingsModel::query()->create([
+            'name' => 'SettingToUpdate',
+            'is_enabled' => 0,
+            'value' => 'OldValue',
+        ]);
+        Cache::put('settings_cache_SettingToUpdate', 'arbitrary_value');
+        $this->assertTrue(Cache::has('settings_cache_SettingToUpdate'));
+
+        $this->artisan('settings:update SettingToUpdate --enabled=1 --value=NewValue')
+            ->assertExitCode(0);
+
+        $this->assertFalse(Cache::has('settings_cache_SettingToUpdate'));
     }
 
     public function test_update_setting_command_with_invalid_enabled_option_shows_error(): void
