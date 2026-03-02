@@ -7,13 +7,15 @@ Phpstan is set to max and test coverage is 100% (I use pcov, have zero idea why 
 ## Summary
 
 Settings here are just records in the DB for storing values (enabled/disabled) that can be retreived in much the same way as you would retrieve values from the config. As they are in the DB, optionally cached, they cannot be leaked in the repo.
-This is not to say there is anything wrong with storing things in the config, it works, its super quick when optimised, and there are plenty of options for protecting sensitive data in .env files. On the other hand, if you ever find yourself
-in a situation where an api token needs to change and for whatever reason a deployment is not possible or will take time, this approach is one potential option. Since they are just database records there is no limit to how flexibly they can
-be used in the application.
 
-### Todo
+This is not to say there is anything wrong with storing things in the config, it works, its super quick when optimised, and there are plenty of options for protecting sensitive data in .env files. On the other hand, if you ever find yourself in a situation where an api token needs to change and for whatever reason a deployment is not possible or will take time, this approach is one potential option. Since they are just database records there is no limit to how flexibly they can be used in the application.
 
-Add a callback function to SettingsManager value method to enable override of config (or any other kind of callback)
+Instead of using `config('some.config.key')` you can use the following pattern to explicitly allow for the functionality of overriding the config with a settings value when or if needed.
+
+```php
+$key = 'some.config.key'
+Setting::value($key, fn() => config($key));
+```
 
 ## Database table
 

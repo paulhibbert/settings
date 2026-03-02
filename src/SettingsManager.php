@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Paulhibbert\Settings;
 
+use Closure;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
@@ -81,18 +82,18 @@ final class SettingsManager
      * Note: cached forever on first retrieval if caching is enabled.
      * Use the update and delete methods to ensure cache is cleared when settings are modified.
      *
-     * Returns null if the setting does not exist or is disabled.
+     * Returns default if the setting does not exist or is disabled.
      * Attempts to cast numeric values to int or float, and JSON strings to arrays.
      * Otherwise returns the raw value as string.
      */
-    public function value(string $name): mixed
+    public function value(string $name, ?Closure $default = null): mixed
     {
         $setting = $this->retrieveSetting($name);
         if (! $setting instanceof SettingsDataObject) {
-            return null;
+            return $default instanceof Closure ? $default() : $default;
         }
         if (! $setting->isEnabled) {
-            return null;
+            return $default instanceof Closure ? $default() : $default;
         }
 
         $value = $setting->value;
