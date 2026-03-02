@@ -4,7 +4,10 @@ This package is mainly for personal use, not on packagist, but feel free to fork
 
 Phpstan is set to max and test coverage is 100% (I use pcov, have zero idea why others use XDEBUG for coverage).
 
+![coverage](https://github.com/user-attachments/assets/b40414d0-cc6e-44db-958d-bcfc9d189b1e)
+
 ## Summary
+
 
 Settings here are just records in the DB for storing values (enabled/disabled) that can be retreived in much the same way as you would retrieve values from the config. As they are in the DB, optionally cached, they cannot be leaked in the repo.
 
